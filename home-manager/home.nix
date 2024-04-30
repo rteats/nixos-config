@@ -87,7 +87,7 @@
   programs.zsh = {
     enable = true;    
     enableCompletion = true;
-    #enableAutosuggestions = true;
+    enableAutosuggestions = true;
     syntaxHighlighting.enable = true;    
         
     shellAliases = {
@@ -154,8 +154,12 @@
   programs.neovim = {
     enable = true;
     defaultEditor = true;
-    #extraConfig = lib.fileContents ;
+    extraLuaConfig = lib.fileContents ./nvim/init.lua;
+    #extraLuaConfig = builtins.readFile ../nvim/init.lua;
     #extraConfig = ''
+    #  luafile ${./nvim/init.lua}
+    #'';
+    #extraLuaConfig = ''
     #  set number relativenumber
     #'';
     #viAlias = true;

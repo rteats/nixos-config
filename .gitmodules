@@ -1,0 +1,6 @@
+[submodule "nvim"]
+	path = nvim
+	url = https://github.com/rteats/nvim
+[submodule "home-manager/nvim"]
+	path = home-manager/nvim
+	url = https://github.com/rteats/nvim
