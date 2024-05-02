@@ -2,8 +2,13 @@
   description = "Your new nix config";
 
   inputs = {
+    nixvim.url = "github:nix-community/nixvim/nixos-23.11";
+    nixvim.inputs.nixpkgs.follows = "nixpkgs";
+
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-23.11";
+
+    #dwm-flake.url = "github:jordanisaacs/dwm-flake";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager/release-23.11";

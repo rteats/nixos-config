@@ -37,8 +37,24 @@
     config = {
       # Disable if you don't want unfree packages
       allowUnfree = true;
+      
+      packageOverrides = pkgs: {
+        intel-vaapi-driver = pkgs.intel-vaapi-driver.override { enableHybridCodec = true; };
+  };
+
     };
   };
+
+  hardware.opengl = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver # LIBVA_DRIVER_NAME=iHD
+      intel-vaapi-driver # LIBVA_DRIVER_NAME=i965 (older but works better for Firefox/Chromium)
+      libvdpau-va-gl
+    ];
+  };
+  environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
+
 
   nix = let
     flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
@@ -48,6 +64,8 @@
       experimental-features = "nix-command flakes";
       # Opinionated: disable global registry
       flake-registry = "";
+      # Workaround for https://github.com/NixOS/nix/issues/9574
+      nix-path = config.nix.nixPath;
     };
     # Opinionated: disable channels
     channel.enable = false;
@@ -123,6 +141,11 @@
   # Enable the XFCE Desktop Environment.
   services.xserver.displayManager.lightdm.enable = true;
   services.xserver.desktopManager.xfce.enable = true;
+  services.xserver.desktopManager.xfce.noDesktop = true;
+  services.picom.enable = true;
+
+  #services.xserver.windowManager.awesome.enable = true;
+  services.xserver.windowManager.spectrwm.enable = true;
 
   # Configure keymap in X11
   services.xserver = {
@@ -150,6 +173,8 @@
 
   # Enable CUPS to print documents.
   services.printing.enable = true;
+
+  services.fractalart.enable = true;
 
   services.logind.extraConfig = "HandlePowerKey=ignore";
 
@@ -197,6 +222,7 @@
     xfce.xfce4-volumed-pulse
     xfce.xfce4-pulseaudio-plugin
     xfce.xfce4-whiskermenu-plugin
+    #xfce.xfdesktop
     stylua
     black
     gcc
@@ -206,6 +232,7 @@
     fzf
     ripgrep
     xclip
+    # dxvk vkd3d-proton dxvk-nvapi latencyflex runtime winebridge soda
   ];
 
   fonts = {
@@ -223,6 +250,18 @@
       };
     };
   };
+
+  #services.xserver.windowManager.dwm.enable = true;
+  #services.xserver.windowManager.dwm.package = pkgs.dwm.overrideAttrs {
+  #  src = pkgs.fetchFromGitHub {
+  #    owner = "rteats";
+  #    repo = "dwm";
+  #    rev = "latest";
+  #    sha256 = lib.fakeSha256;
+  #    #sha256 = "0/YOL1/G2SWncbLNaclSYUz7VyfWu+OB8TYJYm4NYkM=";
+  #      #sha256 = "xbchXJTFWeABTwq6h4KWLh+EvydDrDzcY9AQVK65RS8=";
+  #  };
+  #};
 
   users.defaultUserShell = pkgs.zsh;
   programs.zsh.enable = true;
