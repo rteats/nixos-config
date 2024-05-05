@@ -26,6 +26,7 @@
       # If you want to use overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
 
+      #nvim-nix.overlays.default
       # Or define it inline, for example:
       # (final: prev: {
       #   hi = final.hello.overrideAttrs (oldAttrs: {
@@ -114,7 +115,7 @@
   time.timeZone = "Europe/Moscow";
 
   # Select internationalisation properties.
-  i18n.defaultLocale = "en_US.UTF-8";
+  #i18n.defaultLocale = "en_US.UTF-8";
 
 #  i18n.extraLocaleSettings = {
 #    LANGUAGE = "en_US.UTF-8";
@@ -148,10 +149,10 @@
   services.xserver.windowManager.spectrwm.enable = true;
 
   # Configure keymap in X11
-  services.xserver = {
+  services.xserver.xkb = {
     layout = "us,ru";
-    xkbVariant = ",winkeys";
-    xkbOptions = "grp:toggle,caps:escape";
+    variant = ",winkeys";
+    options = "grp:toggle,caps:escape";
   };
 
   # Enable sound with pipewire.
@@ -216,6 +217,7 @@
     harfbuzz
 
     python3Full
+    #nvim-pkg
     pyright
     #tsserver
     doas

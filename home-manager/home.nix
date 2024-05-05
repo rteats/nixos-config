@@ -23,6 +23,7 @@
     overlays = [
       # If you want to use overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
+      #nvim-nix.overlays.default
 
       # Or define it inline, for example:
       # (final: prev: {
@@ -45,68 +46,69 @@
     homeDirectory = "/home/user";
   };
 
-#  xsession.windowManager.awesome = {
-#    enable = true;
-#    noArgb = true;
-#  };
   xsession.windowManager.spectrwm = {
     enable = true;
     programs = {
-      term = "st";
-      search = "st";
-      menu = "st";
+      term = "alacritty";
+      search = "rofi ";
+      menu = "rofi -show run";
       lock = "xflock4";
     };
     settings = {
+      bar_action = "/home/user/.config/polybar/launch.sh";
       bar_enabled = false;
       color_focus = "rgb:10/14/20";
       color_unfocus = "rgb:0/1/10";
-      
-
     };
   };
 
   # Add stuff for your user as you see fit:
   home.packages = with pkgs; [ 
+    # Multimedia and Creative Tools
     handbrake
-    inkscape-with-extensions
-    gimp 
     kdenlive
-    libreoffice-still
     godot_4
-    unar
-    tenacity
     reaper
-    ungoogled-chromium
-    abaddon
     mpv
-    nsxiv
-    git
-    lutris
-    tldr
-    pavucontrol
     superTuxKart
-    fzf
+    polybar
+    lutris
+
+    # Graphic Design and Editing
+    inkscape-with-extensions
+    gimp
+    libreoffice-still
+    neofetch
+    ungoogled-chromium
+    nsxiv
     kotatogram-desktop
-    bottles
+
+    # Utilities and Development
+    lazygit
+    unar
+    git
+    tldr
+    fzf
     nnn
     ripgrep
+    gh
+    yt-dlp
+    thefuck
+
+    # Audio and Sound Management
+    tenacity
+    pavucontrol
     rnnoise-plugin
     noisetorch
-    gh
-    thefuck
-    yt-dlp
-    (st.overrideAttrs (oldAttrs: rec {
-      # Make sure you include whatever dependencies the fork needs to build properly!
-      buildInputs = oldAttrs.buildInputs ++ [ harfbuzz ];
-    # If you want it to be always up to date use fetchTarball instead of fetchFromGitHub
-      src = builtins.fetchTarball {
-        url = "https://github.com/rteats/st/archive/master.tar.gz";
-	sha256 = "1sx87lix644hfd5q55hrz1hsshxkpfc7k3s13lxrknlsmnd80ig2";
-	#sha256 = lib.fakeSha256;
-      };
-    }))
+
+    # Miscellaneous
+    abaddon
+    bottles
   ];
+
+
+  services.polybar.enable = true;
+  services.polybar.script = "polybar bar &";
 
   # Enable home-manager and git
   programs.home-manager.enable = true;
@@ -124,90 +126,23 @@
   programs.zsh = {
     enable = true;    
     enableCompletion = true;
-    enableAutosuggestions = true;
+    autosuggestion.enable = true;
     syntaxHighlighting.enable = true;    
-        
     shellAliases = {
       ll = "ls -l";
-      update = "sudo nixos-rebuild switch";
       e = "$EDITOR";
     };
-#    history.size = 10000;   
-#    history.path = "${config.xdg.dataHome}/zsh/history";
-      #autoload -Uz compinit && compinit
     completionInit = ''
       autoload -Uz compinit && compinit
       zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
     '';
     autocd = true;
-   #setOptions = [ "autocd" ];    
-#    zplug = {
-#      enable = true;
-#      plugins = [
-#        #{ name = "jeffreytse/zsh-vi-mode"; } # Simple plugin installation
-#        #{ name = "romkatv/powerlevel10k"; tags = [ as:theme depth:1 ]; } # Installations with additional options. For the list of options, please refer to Zplug README.
-#      ];
-#    };
-    plugins = [
-      { 
-        name = "zsh-vi-mode";
-        src = pkgs.fetchFromGitHub {
-          owner = "jeffreytse";
-          repo = "zsh-vi-mode";
-          rev = "v0.11.0";
-          #sha256 = lib.fakeSha256;
-          sha256 = "xbchXJTFWeABTwq6h4KWLh+EvydDrDzcY9AQVK65RS8=";
-        };
-      }
-      {
-        name = "fzf-tab";
-        src = pkgs.fetchFromGitHub {
-          owner = "Aloxaf";
-          repo = "fzf-tab";
-          rev = "v1.1.1";
-          #sha256 = lib.fakeSha256;
-          sha256 = "0/YOL1/G2SWncbLNaclSYUz7VyfWu+OB8TYJYm4NYkM=";
-        };
-      }
-      {
-        name = "ayu";
-        src = pkgs.fetchFromGitHub {
-          owner = "Aloxaf";
-          repo = "fzf-tab";
-          rev = "v1.1.1";
-          #sha256 = lib.fakeSha256;
-          sha256 = "0/YOL1/G2SWncbLNaclSYUz7VyfWu+OB8TYJYm4NYkM=";
-        };
-      }
-    ];
-#  initExtraFirst = ''
-#    DISABLE_FZF_AUTO_COMPLETION="false"
-#  '';
-#  oh-my-zsh = {
-#    enable = true;
-#    plugins = [ "git" "fzf" "thefuck" "vi-mode" "aliases" "copyfile" ];
-#    theme = "robbyrussell";
-#  };
-#  antidote = {
-#    enable = true;
-#    plugins = [
-#      "Aloxaf/fzf-tab"
-#    ];
-#  };
-
+    oh-my-zsh = {
+      enable = true;
+      plugins = [ "git" "fzf" "vi-mode" "aliases" "copyfile" ];
+      theme = "robbyrussell";
+    };
   };
-
-#  services.xserver.windowManager.dwm.enable = true;
-#  services.xserver.windowManager.dwm.package = pkgs.dwm.overrideAttrs {
-#    src = pkgs.fetchFromGitHub {
-#      owner = "rteats";
-#      repo = "dwm";
-#      #rev = "v1.1.1";
-#          #sha256 = lib.fakeSha256;
-#      #sha256 = "0/YOL1/G2SWncbLNaclSYUz7VyfWu+OB8TYJYm4NYkM=";
-#        #sha256 = "xbchXJTFWeABTwq6h4KWLh+EvydDrDzcY9AQVK65RS8=";
-#    };
-#  };
 
   programs.nixvim = {
     enable = true;
@@ -224,14 +159,25 @@
     keymaps = [
       { action = "<cmd>nohlsearch<CR>";
         key = "<Esc>";
-        options = {
-          silent = true;
-        };
       }
       { action = ":";
         key = ";";
       }
     ];	
+
+    extraConfigLuaPost = ''
+      vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
+      vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
+      vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
+      vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+
+      local map = vim.api.nvim_set_keymap
+      local opts = { noremap = true, silent = true }
+
+      -- Move to previous/next
+      map('n', '<C-S-Tab>', '<Cmd>BufferPrevious<CR>', opts)
+      map('n', '<C-Tab>', '<Cmd>BufferNext<CR>', opts)
+    '';
     autoCmd = [
       { event = [ "TextYankPost" ];
 	callback = { __raw = "function() vim.highlight.on_yank() end"; };
@@ -254,9 +200,9 @@
       splitbelow = true;
       list = true;
       listchars = {
-	tab = "» ";
-	trail = "·";
-	nbsp = "␣";
+        tab = "» ";
+        trail = "·";
+        nbsp = "␣";
       };
       inccommand = "split";
       cursorline = true;
@@ -264,38 +210,35 @@
       hlsearch = true;
     };
     plugins = {
-      #sleuth.enable = true;
-      comment-nvim.enable = true;
+      sleuth.enable = true;
+      comment.enable = true;
       gitsigns.enable = true;
       which-key.enable = true;
       telescope.enable = true;
-      #telescope.extensions.ui-select.enable = true;
+      telescope.extensions.ui-select.enable = true;
       lsp.enable = true;
       lsp.servers.pylsp.enable = true;
       lsp.servers.nixd.enable = true;
       lsp.servers.gdscript.enable = true;
       conform-nvim.enable = true;
-      nvim-cmp.enable = true;
+      cmp.enable = true;
       todo-comments.enable = true;
       mini.enable = true;
       treesitter.enable = true;
       barbar.enable = true;
     };
-#      plugins.lazy = {
-#	enable = true;
-#	plugins = with pkgs; [
-#	  {
-#	    #name = "tpope/vim-sleuth";
-#	    pkg = vimPlugins.vim-sleuth;
-#	  }
-#	];
-#      };
+    extraPlugins = [
+      (pkgs.vimUtils.buildVimPlugin {
+      name = "rupilot";
+      src = pkgs.fetchgit {
+          url = "https://github.com/Partysun/rupilot.nvim";
+          rev = "71f5a94afe50834ea16277bab497da7ca388c712";
+          hash = "sha256-zfaE75iZt4PmY1qYi+R5A8L/TJdN2RZnxohEXAr3cSY=";
+        };
+      })
+      pkgs.vimPlugins.nui-nvim
+    ];
 
-   # extraPlugins = with pkgs; [
-   #   vimPlugins.neovim-ayu
-   #   ];
-    #extraPlugins = [ pkgs.vimPlugins.neovim-ayu ];
-    #colorscheme = "ayu";
   };
 
   #programs.neovim = {
@@ -318,26 +261,11 @@
 #      vimPlugins.telescope-nvim
 #    ];
 #  };
- 
+
   programs.fzf = {
     enable = true;
     enableZshIntegration = true;
   };
-
- # programs.vscode = {
- #   enable = true;
- #   enableUpdateCheck = false;
- #   enableExtensionUpdateCheck = false;
- #   package = pkgs.vscodium;
- #   extensions = with pkgs; [
- #     vscode-extensions.bbenoist.nix
- #     #vscode-extensions.ms-python.python
- #     vscode-extensions.ms-python.vscode-pylance
- #     vscode-extensions.esbenp.prettier-vscode
-#
- #   ];
- # };
-
 
   programs.obs-studio = {
     enable = true;
@@ -345,6 +273,68 @@
       obs-studio-plugins.obs-backgroundremoval
     ];
   };
+
+  programs.rofi = {
+    enable = true;
+  };
+
+  programs.alacritty = {
+    enable = true;
+    settings = {
+      font = {
+        size = 14;
+        offset.y = 4;
+        glyph_offset.y = 4;
+      };
+      mouse.hide_when_typing = true;
+      colors = {
+        # Default colors
+        primary = {
+          background = "0x0a0e14";
+          foreground = "0xb3b1ad";
+	};
+        # Normal colors
+        normal = {
+          black =  "0x01060e";
+          red =  "0xea6c73";
+          green =  "0x91b362";
+          yellow =  "0xf9af4f";
+          blue =  "0x53bdfa";
+          magenta =  "0xfae994";
+          cyan =  "0x90e1c6";
+          white =  "0xc7c7c7";
+	};
+        # Bright colors
+        bright = {
+	  black = "0x686868";
+	  blue = "0x59c2ff";
+	  cyan = "0x95e6cb";
+	  green = "0xc2d94c";
+	  magenta = "0xffee99";
+	  red = "0xf07178";
+	  white = "0xffffff";
+	  yellow = "0xffb454";
+	};
+      };
+    };
+  };
+
+  programs.tmux = {
+    enable = true;
+    clock24 = true;
+    keyMode = "vi";
+    mouse = true;
+    terminal = "screen-256color";
+    plugins = with pkgs; [
+      # tmuxPlugins.tpm
+      tmuxPlugins.sensible
+      tmuxPlugins.yank
+      tmuxPlugins.pain-control
+      tmuxPlugins.resurrect
+      tmuxPlugins.prefix-highlight
+    ];
+  };
+
   # Nicely reload system units when changing configs
   systemd.user.startServices = "sd-switch";
 
