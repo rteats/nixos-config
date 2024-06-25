@@ -38,11 +38,10 @@
     config = {
       # Disable if you don't want unfree packages
       allowUnfree = true;
-      
-      packageOverrides = pkgs: {
-        intel-vaapi-driver = pkgs.intel-vaapi-driver.override { enableHybridCodec = true; };
-  };
 
+      packageOverrides = pkgs: {
+        intel-vaapi-driver = pkgs.intel-vaapi-driver.override {enableHybridCodec = true;};
+      };
     };
   };
 
@@ -54,8 +53,7 @@
       libvdpau-va-gl
     ];
   };
-  environment.sessionVariables = { LIBVA_DRIVER_NAME = "iHD"; }; # Force intel-media-driver
-
+  environment.sessionVariables = {LIBVA_DRIVER_NAME = "iHD";}; # Force intel-media-driver
 
   nix = let
     flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
@@ -99,7 +97,7 @@
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  boot.supportedFilesystems = [ "ntfs" ];
+  boot.supportedFilesystems = ["ntfs"];
 
   networking.hostName = "teclast";
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -117,48 +115,77 @@
   # Select internationalisation properties.
   #i18n.defaultLocale = "en_US.UTF-8";
 
-#  i18n.extraLocaleSettings = {
-#    LANGUAGE = "en_US.UTF-8";
-#    LC_ALL = "en_US.UTF-8";
-#    LC_ADDRESS = "en_US.UTF-8";
-#    LC_IDENTIFICATION = "en_US.UTF-8";
-#    LC_MEASUREMENT = "en_US.UTF-8";
-#    LC_MONETARY = "en_US.UTF-8";
-#    LC_NAME = "en_US.UTF-8";
-#    LC_NUMERIC = "en_US.UTF-8";
-#    LC_PAPER = "en_US.UTF-8";
-#    LC_TELEPHONE = "en_US.UTF-8";
-#    LC_TIME = "en_US.UTF-8";
-#  };
+  #  i18n.extraLocaleSettings = {
+  #    LANGUAGE = "en_US.UTF-8";
+  #    LC_ALL = "en_US.UTF-8";
+  #    LC_ADDRESS = "en_US.UTF-8";
+  #    LC_IDENTIFICATION = "en_US.UTF-8";
+  #    LC_MEASUREMENT = "en_US.UTF-8";
+  #    LC_MONETARY = "en_US.UTF-8";
+  #    LC_NAME = "en_US.UTF-8";
+  #    LC_NUMERIC = "en_US.UTF-8";
+  #    LC_PAPER = "en_US.UTF-8";
+  #    LC_TELEPHONE = "en_US.UTF-8";
+  #    LC_TIME = "en_US.UTF-8";
+  #  };
 
   security.doas = {
     enable = true;
-    extraRules = [ { users = ["user"]; persist = true; } ];
+    extraRules = [
+      {
+        users = ["user"];
+        persist = true;
+      }
+    ];
   };
 
   # Enable the X11 windowing system.
-  services.xserver.enable = true;
 
-  # Enable the XFCE Desktop Environment.
-  services.xserver.displayManager.lightdm.enable = true;
-  services.xserver.desktopManager.xfce.enable = true;
-  services.xserver.desktopManager.xfce.noDesktop = true;
+  services.xserver = {
+    enable = true;
+    digimend.enable = true;
+
+    desktopManager = {
+      xterm.enable = false;
+      xfce = {
+        enable = true;
+        noDesktop = true;
+        enableXfwm = false;
+      };
+
+    };
+    # displayManager.lightdm.enable = false;
+    displayManager.gdm.enable = true;
+    # windowManager.i3 = {
+    #   enable = true;
+    #     extraPackages = with pkgs; [
+    #       dmenu #application launcher most people use
+    #       i3status # gives you the default i3 status bar
+    #       i3lock #default i3 screen locker
+    #       i3blocks #if you are planning on using i3blocks over i3status
+    #    ];
+    # };
+    synaptics.twoFingerScroll = false;
+    synaptics.scrollDelta = 140;
+
+    #services.xserver.windowManager.awesome.enable = true;
+    windowManager.spectrwm.enable = false;
+    # Configure keymap in X11
+    xkb = {
+      layout = "us,ru";
+      variant = ",winkeys";
+      options = "grp:toggle,caps:escape";
+    };
+  };
   services.picom.enable = true;
-
-  #services.xserver.windowManager.awesome.enable = true;
-  services.xserver.windowManager.spectrwm.enable = true;
-
-  # Configure keymap in X11
-  services.xserver.xkb = {
-    layout = "us,ru";
-    variant = ",winkeys";
-    options = "grp:toggle,caps:escape";
+  services.displayManager = {
+    defaultSession = "xfce+dwm";
   };
 
   # Enable sound with pipewire.
-#  sound.enable = true;
-  #hardware.pulseaudio.enable = true;
-#  security.rtkit.enable = true;
+  sound.enable = true;
+  # hardware.pulseaudio.enable = true;
+  #  security.rtkit.enable = true;
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -175,7 +202,7 @@
   # Enable CUPS to print documents.
   services.printing.enable = true;
 
-  services.fractalart.enable = true;
+  # services.fractalart.enable = true;
 
   services.logind.extraConfig = "HandlePowerKey=ignore";
 
@@ -204,7 +231,7 @@
     ffmpeg
 
     # editors
-    neovim 
+    neovim
 
     wget
     cmake
@@ -224,6 +251,7 @@
     xfce.xfce4-volumed-pulse
     xfce.xfce4-pulseaudio-plugin
     xfce.xfce4-whiskermenu-plugin
+    android-tools
     #xfce.xfdesktop
     stylua
     black
@@ -235,6 +263,28 @@
     ripgrep
     xclip
     # dxvk vkd3d-proton dxvk-nvapi latencyflex runtime winebridge soda
+
+
+    (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
+      pkgs.buildFHSUserEnv (base // {
+      name = "fhs";
+      targetPkgs = pkgs: (
+        # pkgs.buildFHSUserEnv provides only a minimal FHS environment,
+        # lacking many basic packages needed by most software.
+        # Therefore, we need to add them manually.
+        #
+        # pkgs.appimageTools provides basic packages required by most software.
+        (base.targetPkgs pkgs) ++ [
+          pkgs.pkg-config
+          pkgs.ncurses
+          pkgs.icu
+          # Feel free to add more packages here if needed.
+        ]
+      );
+      profile = "export FHS=1";
+      runScript = "zsh";
+      extraOutputsToInstall = ["dev"];
+    }))
   ];
 
   fonts = {
@@ -247,26 +297,77 @@
     fontconfig = {
       defaultFonts = {
         #serif = [ "Vazirmatn" "Ubuntu" ];
-        sansSerif = [ "Inter" ];
-        monospace = [ "JetBrains Mono" ];
+        sansSerif = ["Inter"];
+        monospace = ["JetBrains Mono"];
       };
     };
   };
 
-  #services.xserver.windowManager.dwm.enable = true;
-  #services.xserver.windowManager.dwm.package = pkgs.dwm.overrideAttrs {
-  #  src = pkgs.fetchFromGitHub {
-  #    owner = "rteats";
-  #    repo = "dwm";
-  #    rev = "latest";
-  #    sha256 = lib.fakeSha256;
-  #    #sha256 = "0/YOL1/G2SWncbLNaclSYUz7VyfWu+OB8TYJYm4NYkM=";
-  #      #sha256 = "xbchXJTFWeABTwq6h4KWLh+EvydDrDzcY9AQVK65RS8=";
-  #  };
-  #};
+  services.dwm-status.enable = true;
+  services.dwm-status.order = [ "audio" "battery" "cpu_load" "network" "time" ];
+
+  services.xserver.windowManager.dwm.enable = true;
+  services.xserver.windowManager.dwm.package = pkgs.dwm.overrideAttrs {
+   src = pkgs.fetchFromGitHub {
+     owner = "rteats";
+     repo = "dwm";
+     rev = "ed181baf5fce20fdebf9902f728e2101847dd2af";
+     sha256 = "ZUT+B2/ALJ9lSzC5Bi/Stc9S2aYnilxaAI92SB6U2Is=";
+     #sha256 = "0/YOL1/G2SWncbLNaclSYUz7VyfWu+OB8TYJYm4NYkM=";
+       #sha256 = "xbchXJTFWeABTwq6h4KWLh+EvydDrDzcY9AQVK65RS8=";
+   };
+  };
+
+  stylix = {
+    enable = true;
+    autoEnable = true;
+    image = pkgs.fetchurl {
+      url = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Black_colour.jpg/450px-Black_colour.jpg";
+      sha256 = "BFbiwE4KpDf9oXmZ7UyZVuDimhI9kCHhbP+nqhB+eGQ=";
+      # sha256 = lib.fakeSha256;
+    };
+    base16Scheme = "${pkgs.base16-schemes}/share/themes/ayu-dark.yaml";
+    fonts = {
+      sansSerif = {
+        package = pkgs.inter;
+        name = "Inter";
+      };
+      monospace = {
+        package = pkgs.jetbrains-mono;
+        name = "JetBrains Mono";
+      };
+      emoji = {
+        package = pkgs.noto-fonts-emoji;
+        name = "Noto Color Emoji";
+      };
+      serif = config.stylix.fonts.sansSerif;
+    };
+    targets = {
+      gtk.enable = true;
+      lightdm.enable = true;
+    };
+
+  };
+
+  programs.nix-ld.enable = true;
+  programs.nix-ld.libraries = with pkgs; [
+    # Add any missing dynamic libraries for unpackaged programs
+    # here, NOT in environment.systemPackages
+  ];
 
   users.defaultUserShell = pkgs.zsh;
   programs.zsh.enable = true;
+
+  programs.steam.enable = true;
+
+  # obs virtual webcam
+  boot.extraModulePackages = with config.boot.kernelPackages; [
+    v4l2loopback
+  ];
+  boot.extraModprobeConfig = ''
+    options v4l2loopback devices=1 video_nr=1 card_label="OBS Cam" exclusive_caps=1
+  '';
+  security.polkit.enable = true;
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "23.05";

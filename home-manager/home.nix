@@ -11,8 +11,10 @@
   imports = [
     # If you want to use home-manager modules from other flakes (such as nix-colors):
     # inputs.nix-colors.homeManagerModule
-    inputs.nixvim.homeManagerModules.nixvim
+    #inputs.nixvim.homeManagerModules.nixvim
     #inputs.dwm-flake
+    #inputs.nix-nvim
+    # inputs.boomer
 
     # You can also split up your configuration and import pieces of it here:
     # ./nvim.nix
@@ -23,7 +25,10 @@
     overlays = [
       # If you want to use overlays exported from other flakes:
       # neovim-nightly-overlay.overlays.default
-      #nvim-nix.overlays.default
+      # nix-nvim.overlays.default
+      #inputs.nix-nvim.overlays.default
+      # inputs.dwm-flake.overlays.default
+      # inputs.boomer.overlays.default
 
       # Or define it inline, for example:
       # (final: prev: {
@@ -46,24 +51,47 @@
     homeDirectory = "/home/user";
   };
 
-  xsession.windowManager.spectrwm = {
-    enable = true;
-    programs = {
-      term = "alacritty";
-      search = "rofi ";
-      menu = "rofi -show run";
-      lock = "xflock4";
-    };
-    settings = {
-      bar_action = "/home/user/.config/polybar/launch.sh";
-      bar_enabled = false;
-      color_focus = "rgb:10/14/20";
-      color_unfocus = "rgb:0/1/10";
-    };
-  };
+  # xsession.windowManager.spectrwm = {
+  #   enable = true;
+  #   programs = {
+  #     term = "alacritty";
+  #     search = "rofi ";
+  #     menu = "rofi -show run";
+  #     lock = "xflock4";
+  #   };
+  #   settings = {
+  #     bar_action = "/home/user/.config/polybar/launch.sh";
+  #     bar_enabled = false;
+  #     color_focus = "rgb:10/14/20";
+  #     color_unfocus = "rgb:0/1/10";
+  #     modkey = "Mod4";
+  #     #bind[firefox]		= MOD+Shift+b
+
+  #   };
+  #   bindings = {
+  #     menu = "Mod+d";
+  #   };
+  # };
+
+  # xsession.windowManager.i3 = {
+  #   enable = true;
+  #   package = pkgs.i3-gaps;
+  #   config = {
+  #     modifier = "Mod4";
+  #     gaps = {
+  #       inner = 10;
+  #       outer = 5;
+  #     };
+  #   };
+  # };
+  fonts.fontconfig.enable = true;
+
+  # Workaround home-manager bug with flakes
+  # - https://github.com/nix-community/home-manager/issues/2033
+  news.display = "silent";
 
   # Add stuff for your user as you see fit:
-  home.packages = with pkgs; [ 
+  home.packages = with pkgs; [
     # Multimedia and Creative Tools
     handbrake
     kdenlive
@@ -73,19 +101,23 @@
     superTuxKart
     polybar
     lutris
+    blender
 
     # Graphic Design and Editing
     inkscape-with-extensions
     gimp
     libreoffice-still
     neofetch
-    ungoogled-chromium
+    chromium
     nsxiv
-    kotatogram-desktop
+    #kotatogram-desktop
+    telegram-desktop
+    mypaint
+    krita
 
     # Utilities and Development
     lazygit
-    unar
+    ouch
     git
     tldr
     fzf
@@ -93,7 +125,17 @@
     ripgrep
     gh
     yt-dlp
+    ytfzf
     thefuck
+    bat
+    imagemagick
+    ncdu
+    transmission_4-gtk
+    bash
+    lunarvim
+    zathura
+    python312Packages.cairosvg
+    jdk22
 
     # Audio and Sound Management
     tenacity
@@ -101,14 +143,122 @@
     rnnoise-plugin
     noisetorch
 
-    # Miscellaneous
+    # Communication
     abaddon
+    armcord
+
+    # Miscellaneous
     bottles
+    python312Packages.flake8
+    arandr
+
+    # Fonts
+    inter
+    jetbrains-mono
+    intel-one-mono
+    montserrat
   ];
+  
+  # fonts = {
+  #   enableDefaultPackages = true;
+  #   packages = with pkgs; [
+  #     inter
+  #     jetbrains-mono
+  #     intel-one-mono
+  #     montserrat
+  #   ];
+    # fontconfig = {
+    #   defaultFonts = {
+    #     #serif = [ "Vazirmatn" "Ubuntu" ];
+    #     sansSerif = ["Inter"];
+    #     monospace = ["JetBrains Mono"];
+    #   };
+    # };
+  # };
+
+  programs.yazi = {
+    enable = true;
+    enableZshIntegration = true;
+    plugins = {
+        ouch = pkgs.fetchFromGitHub {
+          owner = "ndtoan96";
+          repo = "ouch.yazi";
+          rev = "694d149be5f96eaa0af68d677c17d11d2017c976";
+          # sha256 = lib.fakeSha256;
+          sha256 = "J3vR9q4xHjJt56nlfd+c8FrmMVvLO78GiwSNcLkM4OU=";
+        };
+    };
+
+  };
+
+  stylix = {
+    enable = true;
+    autoEnable = true;
+    image = pkgs.fetchurl {
+      url = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Black_colour.jpg/450px-Black_colour.jpg";
+      sha256 = "BFbiwE4KpDf9oXmZ7UyZVuDimhI9kCHhbP+nqhB+eGQ=";
+      # sha256 = lib.fakeSha256;
+    };
+    cursor = {
+      package = pkgs.bibata-cursors;
+      name = "Bibata-Original-Classic";
+      size = 20;
+    };
+    base16Scheme = "${pkgs.base16-schemes}/share/themes/ayu-dark.yaml";
+    fonts = {
+      sansSerif = {
+        package = pkgs.inter;
+        name = "Inter";
+      };
+      monospace = {
+        package = pkgs.jetbrains-mono;
+        name = "JetBrains Mono";
+      };
+      emoji = {
+        package = pkgs.noto-fonts-emoji;
+        name = "Noto Color Emoji";
+      };
+      serif = config.stylix.fonts.sansSerif;
+      sizes.terminal = 10;
+    };
+    targets = {
+      xfce.enable = true;
+      gtk.enable = true;
+    };
+
+  };
+
+  gtk.iconTheme = {
+    package = pkgs.papirus-icon-theme;
+    name = "Papirus-Dark";
+  };
+
+  xfconf.settings = {
+    xfce4-power-manager = {
+      "xfce4-power-manager/brightness-exponential" = true;
+    };
+  };
+
+  xdg.mimeApps = {
+    enable= true;
+    defaultApplications = {
+      "application/pdf" = [ "zathura.desktop" "chromium.desktop" ];
+      "image/png" = [ "sxiv.desktop" "gimp.desktop" ];
+      "application/x-zerosize"=[ "nvim.desktop" ];
+      "application/vnd.microsoft.portable-executable"=[ "winetricks.desktop" ];
+      "x-scheme-handler/magnet"=[ "userapp-transmission-gtk-3BIDP2.desktop" ];
+      # "application/pdf"=[ "org.pwmt.zathura-pdf-mupdf.desktop" ];
+      
+      "x-scheme-handler/tg"=[ "org.telegram.desktop.desktop" ];
+      # "application/pdf"=[ org.pwmt.zathura-pdf-mupdf.desktop ];
+
+    };
+
+  };
 
 
-  services.polybar.enable = true;
-  services.polybar.script = "polybar bar &";
+  # services.polybar.enable = true;
+  # services.polybar.script = "polybar bar &";
 
   # Enable home-manager and git
   programs.home-manager.enable = true;
@@ -124,13 +274,13 @@
   };
 
   programs.zsh = {
-    enable = true;    
+    enable = true;
     enableCompletion = true;
     autosuggestion.enable = true;
-    syntaxHighlighting.enable = true;    
+    syntaxHighlighting.enable = true;
     shellAliases = {
       ll = "ls -l";
-      e = "$EDITOR";
+      e = "lvim";
     };
     completionInit = ''
       autoload -Uz compinit && compinit
@@ -139,111 +289,14 @@
     autocd = true;
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "fzf" "vi-mode" "aliases" "copyfile" ];
+      plugins = [ "git" "ripgrep" "themes" "z" "zsh-interactive-cd" "fzf" "vi-mode" "aliases" "copyfile" ];
       theme = "robbyrussell";
     };
   };
 
-  programs.nixvim = {
+  programs.neovim = {
     enable = true;
     defaultEditor = true;
-    clipboard.providers.xclip.enable = true;
-    clipboard.register = "unnamedplus";
-    viAlias = true;
-    vimAlias = true;
-    globals = {
-      mapleader = " ";
-      maplocalleader = " ";
-    };
-    colorschemes.ayu.enable = true;
-    keymaps = [
-      { action = "<cmd>nohlsearch<CR>";
-        key = "<Esc>";
-      }
-      { action = ":";
-        key = ";";
-      }
-    ];	
-
-    extraConfigLuaPost = ''
-      vim.keymap.set('n', '[d', vim.diagnostic.goto_prev, { desc = 'Go to previous [D]iagnostic message' })
-      vim.keymap.set('n', ']d', vim.diagnostic.goto_next, { desc = 'Go to next [D]iagnostic message' })
-      vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = 'Show diagnostic [E]rror messages' })
-      vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
-
-      local map = vim.api.nvim_set_keymap
-      local opts = { noremap = true, silent = true }
-
-      -- Move to previous/next
-      map('n', '<C-S-Tab>', '<Cmd>BufferPrevious<CR>', opts)
-      map('n', '<C-Tab>', '<Cmd>BufferNext<CR>', opts)
-    '';
-    autoCmd = [
-      { event = [ "TextYankPost" ];
-	callback = { __raw = "function() vim.highlight.on_yank() end"; };
-      }
-    ];
-    opts = {
-      number = true;         # Show line numbers
-      relativenumber = true; # Show relative line numbers
-      shiftwidth = 2;        # Tab width should be 2
-      mouse = "a";
-      showmode = false;
-      breakindent = true;
-      undofile = true;
-      ignorecase = true;
-      smartcase = true;
-      signcolumn = "yes";
-      updatetime = 250;
-      timeoutlen = 300;
-      splitright = true;
-      splitbelow = true;
-      list = true;
-      listchars = {
-        tab = "» ";
-        trail = "·";
-        nbsp = "␣";
-      };
-      inccommand = "split";
-      cursorline = true;
-      scrolloff = 10;
-      hlsearch = true;
-    };
-    plugins = {
-      sleuth.enable = true;
-      comment.enable = true;
-      gitsigns.enable = true;
-      which-key.enable = true;
-      telescope.enable = true;
-      telescope.extensions.ui-select.enable = true;
-      lsp.enable = true;
-      lsp.servers.pylsp.enable = true;
-      lsp.servers.nixd.enable = true;
-      lsp.servers.gdscript.enable = true;
-      conform-nvim.enable = true;
-      cmp.enable = true;
-      todo-comments.enable = true;
-      mini.enable = true;
-      treesitter.enable = true;
-      barbar.enable = true;
-    };
-    extraPlugins = [
-      (pkgs.vimUtils.buildVimPlugin {
-      name = "rupilot";
-      src = pkgs.fetchgit {
-          url = "https://github.com/Partysun/rupilot.nvim";
-          rev = "71f5a94afe50834ea16277bab497da7ca388c712";
-          hash = "sha256-zfaE75iZt4PmY1qYi+R5A8L/TJdN2RZnxohEXAr3cSY=";
-        };
-      })
-      pkgs.vimPlugins.nui-nvim
-    ];
-
-  };
-
-  #programs.neovim = {
-  #   enable = true;
-  #   defaultEditor = true;
   #   extraLuaConfig = lib.fileContents ./nvim/init.lua;
     #extraLuaConfig = builtins.readFile ../nvim/init.lua;
     #extraConfig = ''
@@ -252,15 +305,15 @@
     #extraLuaConfig = ''
     #  set number relativenumber
     #'';
-    #viAlias = true;
-    #vimAlias = true;
+    viAlias = true;
+    vimAlias = true;
     #plugins = with pkgs; [
 #      vimPlugins.vim-sleuth
 #      vimPlugins.comment-nvim
 #      vimPlugins.gitsigns-nvim
 #      vimPlugins.telescope-nvim
 #    ];
-#  };
+  };
 
   programs.fzf = {
     enable = true;
@@ -282,40 +335,41 @@
     enable = true;
     settings = {
       font = {
-        size = 14;
+        # size = 14;
         offset.y = 4;
         glyph_offset.y = 4;
       };
+      selection.save_to_clipboard = true;
       mouse.hide_when_typing = true;
-      colors = {
-        # Default colors
-        primary = {
-          background = "0x0a0e14";
-          foreground = "0xb3b1ad";
-	};
-        # Normal colors
-        normal = {
-          black =  "0x01060e";
-          red =  "0xea6c73";
-          green =  "0x91b362";
-          yellow =  "0xf9af4f";
-          blue =  "0x53bdfa";
-          magenta =  "0xfae994";
-          cyan =  "0x90e1c6";
-          white =  "0xc7c7c7";
-	};
-        # Bright colors
-        bright = {
-	  black = "0x686868";
-	  blue = "0x59c2ff";
-	  cyan = "0x95e6cb";
-	  green = "0xc2d94c";
-	  magenta = "0xffee99";
-	  red = "0xf07178";
-	  white = "0xffffff";
-	  yellow = "0xffb454";
-	};
-      };
+      # colors = {
+      #   # Default colors
+      #   primary = {
+      #     background = "0x0a0e14";
+      #     foreground = "0xb3b1ad";
+      #   };
+      #   # Normal colors
+      #   normal = {
+      #     black =  "0x01060e";
+      #     red =  "0xea6c73";
+      #     green =  "0x91b362";
+      #     yellow =  "0xf9af4f";
+      #     blue =  "0x53bdfa";
+      #     magenta =  "0xfae994";
+      #     cyan =  "0x90e1c6";
+      #     white =  "0xc7c7c7";
+      #   };
+      #   # Bright colors
+      #   bright = {
+      #     black = "0x686868";
+      #     red = "0xf07178";
+      #     blue = "0x59c2ff";
+      #     cyan = "0x95e6cb";
+      #     green = "0xc2d94c";
+      #     magenta = "0xffee99";
+      #     white = "0xffffff";
+      #     yellow = "0xffb454";
+      #   };
+      # };
     };
   };
 
