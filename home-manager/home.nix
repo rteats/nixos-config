@@ -46,10 +46,33 @@
     };
   };
 
+  home.sessionVariables = {
+  };
   home = {
     username = "user";
     homeDirectory = "/home/user";
+    sessionVariables = {
+      # Replace with your actual proxy address and port
+      HTTP_PROXY = "http://127.0.0.1:7890";
+      HTTPS_PROXY = "http://127.0.0.1:7890";
+      ALL_PROXY = "socks5://127.0.0.1:7890";
+      
+      # Lowercase versions are also recommended as some tools look for them specifically
+      http_proxy = "http://127.0.0.1:7890";
+      https_proxy = "http://127.0.0.1:7890";
+      all_proxy = "socks5://127.0.0.1:7890";
+
+      # Bypass the proxy for local traffic
+      NO_PROXY = "localhost,127.0.0.1,localaddress,.localdomain.com";
+      no_proxy = "localhost,127.0.0.1,localaddress,.localdomain.com";
+      GDK_SCALE = "2";
+      GDK_DPI_SCALE = "0.5";
+      QT_SCALE_FACTOR = "2";
+      QT_AUTO_SCREEN_SCALE_FACTOR = "2";
+    };
   };
+
+
 
   # xsession.windowManager.spectrwm = {
   #   enable = true;
@@ -90,32 +113,49 @@
   # - https://github.com/nix-community/home-manager/issues/2033
   news.display = "silent";
 
+  programs.antigravity.enable = true;
+
   # Add stuff for your user as you see fit:
   home.packages = with pkgs; [
     # Multimedia and Creative Tools
-    handbrake
-    kdenlive
-    godot_4
-    reaper
+    # handbrake
+    # kdenlive
+    # godot_4
+    # reaper
     mpv
-    superTuxKart
-    polybar
-    lutris
-    blender
+    mangojuice
+    ayugram-desktop
+    # superTuxKart
+    # polybar
+    # lutris
+    # blender
+
+    
 
     # Graphic Design and Editing
     inkscape-with-extensions
+    # inkscape
     gimp
     libreoffice-still
-    neofetch
-    chromium
+    fastfetch
+    # chromium
     nsxiv
     #kotatogram-desktop
-    telegram-desktop
-    mypaint
-    krita
+    # telegram-desktop
+    # mypaint
+    # krita
+    htop
+    gotop
+    btop
 
     # Utilities and Development
+    keepassxc
+    syncthingtray-minimal
+    # gparted
+
+    syncthing
+
+
     lazygit
     ouch
     git
@@ -123,42 +163,57 @@
     fzf
     nnn
     ripgrep
-    gh
-    yt-dlp
+    # gh
+    # yt-dlp
     ytfzf
-    thefuck
+    pay-respects
     bat
     imagemagick
     ncdu
-    transmission_4-gtk
+    # transmission_4-gtk
     bash
-    lunarvim
     zathura
-    python312Packages.cairosvg
-    jdk22
+    github-cli
+
+    # python312Packages.cairosvg
+    # jdk22
 
     # Audio and Sound Management
-    tenacity
+    # tenacity
     pavucontrol
     rnnoise-plugin
     noisetorch
 
     # Communication
-    abaddon
-    armcord
+    # abaddon
+    # armcord
 
     # Miscellaneous
-    bottles
-    python312Packages.flake8
-    arandr
+    # bottles
+    # python312Packages.flake8
+    # arandr
 
     # Fonts
     inter
     jetbrains-mono
     intel-one-mono
     montserrat
+    proxychains-ng
   ];
   
+  # Define the proxychains configuration file
+  xdg.configFile."proxychains/proxychains.conf".text = ''
+    # proxychains.conf
+    strict_chain
+    proxy_dns
+    remote_dns_subnet 224
+    tcp_read_time_out 15000
+    tcp_connect_time_out 8000
+    
+    [ProxyList]
+    # protocol host port
+    socks5 127.0.0.1 7890
+  '';
   # fonts = {
   #   enableDefaultPackages = true;
   #   packages = with pkgs; [
@@ -176,6 +231,38 @@
     # };
   # };
 
+  # home.nix
+  programs.git = {
+    enable = true;
+    settings.user = {
+      name = "rteats";
+      email = "rteatsrteats@gmail.com";
+    };
+    # Tell Git to format signatures using SSH
+    extraConfig = {
+      gpg.format = "ssh"; 
+    };
+  
+    # Point directly to your public key string or public key path
+    signing = {
+      key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub"; 
+      # Alternatively, you can use a file path:
+      # key = "${config.home.homeDirectory}/.ssh/id_ed25519.pub"; 
+      signByDefault = true;
+    };
+  };
+
+
+  programs.chromium = {
+    enable = true;
+    package = pkgs.chromium;
+    extensions = [
+      { id="ddkjiahejlhfcafbddmgiahcphecmpfh";} 
+      { id="bmhfelbhbkeoldaiphchjibggnoodpcj";} 
+      { id="jghecgabfgfdldnmbfkhmffcabddioke";} 
+    ];
+  };
+
   programs.yazi = {
     enable = true;
     enableZshIntegration = true;
@@ -191,20 +278,69 @@
 
   };
 
+  home.pointerCursor = {
+    gtk.enable = true;
+    x11.enable = true;
+    name = "Bibata-Original-Classic"; # Replace with your cursor theme
+    size = 64;                       # Set your desired cursor size here
+  };
+
+
+
+  xfconf.settings = {
+    xfce4-desktop = {
+      "backdrop/screen0/monitor0/workspace0/color-style" = 0; # Solid color or None
+      # "backdrop/screen0/monitor0/workspace0/image-style" = 5; # Centered, Scaled, or Tiled (5 for Zoomed)
+      # "backdrop/screen0/monitor0/workspace0/last-image" = "/home/your_username/Pictures/your-wallpaper.jpg";
+    };
+    xfce4-power-manager = {
+      # 3 = Hibernate in XFCE's internal mapping
+      "xfce4-power-manager/power-button-action" = 3; 
+
+      # Optional: If you also want it to hibernate when closing the lid
+      "xfce4-power-manager/lid-action-on-battery" = 3;
+      "xfce4-power-manager/lid-action-on-ac" = 3;
+
+      # Prevent XFCE from overriding with standard suspend
+      "xfce4-power-manager/critical-power-action" = 3; 
+
+      "xfce4-power-manager/brightness-exponential" = false;
+    };
+    xsettings = {
+      "Gdk/WindowScalingFactor" = 2; # Double the UI element sizes
+      "Gtk/CursorThemeSize" = 64;    # Prevent the mouse cursor from shrinking
+    };
+    xfwm4 = {
+      "general/theme" = "Default-xhdpi"; # Scale up window borders and title bars
+    };
+    # Alternatively, for xfce4-settings based on libinput
+    # pointers = {
+    #   "xfce4-pointer-settings"
+    # };
+    pointers = {
+      "ELAN231000_04F33238_Touchpad/ReverseScrolling" = true;
+      "ELAN231000_04F33238_Touchpad/Acceleration" = 6.0;
+      "ELAN231000_04F33238_Touchpad/Threshold" = 1;
+      "ELAN231000_04F33238_Touchpad/RightHanded" = true;
+    };
+  };
+
   stylix = {
+    overlays.enable = false;
+
     enable = true;
     autoEnable = true;
     image = pkgs.fetchurl {
-      url = "https://upload.wikimedia.org/wikipedia/commons/thumb/5/50/Black_colour.jpg/450px-Black_colour.jpg";
-      sha256 = "BFbiwE4KpDf9oXmZ7UyZVuDimhI9kCHhbP+nqhB+eGQ=";
+      url = "https://upload.wikimedia.org/wikipedia/commons/thumb/9/95/Black_Colour.svg/1920px-Black_Colour.svg.png";
+      sha256 = "sha256-1sDX3zlpJA7rAwNgcxFsvrrehHaarFgalNe8k5wEruc=";
       # sha256 = lib.fakeSha256;
     };
     cursor = {
       package = pkgs.bibata-cursors;
       name = "Bibata-Original-Classic";
-      size = 20;
+      size = 64;
     };
-    base16Scheme = "${pkgs.base16-schemes}/share/themes/ayu-dark.yaml";
+    base16Scheme = "${pkgs.base16-schemes}/share/themes/ayu-light.yaml";
     fonts = {
       sansSerif = {
         package = pkgs.inter;
@@ -215,30 +351,32 @@
         name = "JetBrains Mono";
       };
       emoji = {
-        package = pkgs.noto-fonts-emoji;
+        package = pkgs.noto-fonts-color-emoji;
         name = "Noto Color Emoji";
       };
       serif = config.stylix.fonts.sansSerif;
-      sizes.terminal = 10;
+      sizes.terminal = 24;
     };
     targets = {
       xfce.enable = true;
-      gtk.enable = true;
+      # gtk.enable = true;
     };
 
   };
 
   gtk.iconTheme = {
     package = pkgs.papirus-icon-theme;
-    name = "Papirus-Dark";
+    name = "Papirus-Light";
   };
 
-  xfconf.settings = {
-    xfce4-power-manager = {
-      "xfce4-power-manager/brightness-exponential" = true;
-    };
-  };
 
+  xdg.configFile."autostart/flclashx.desktop".text = ''
+    [Desktop Entry]
+    Type=Application
+    Name=FlClashX
+    Exec=bash -c "/run/current-system/sw/bin/appimage-run /home/user/Desktop/FlClashX-linux-amd64.AppImage"
+    X-GNOME-Autostart-enabled=true
+  '';
   xdg.mimeApps = {
     enable= true;
     defaultApplications = {
@@ -257,21 +395,20 @@
   };
 
 
+  # Fixes legacy/standalone X11 application fonts
+  xresources.properties = {
+    "Xft.dpi" = 192;
+  };
+
+  services.syncthing = {
+    enable = true;
+  };
+
   # services.polybar.enable = true;
   # services.polybar.script = "polybar bar &";
 
   # Enable home-manager and git
   programs.home-manager.enable = true;
-  programs.git = {
-    enable = true;
-    userName  = "rteats";
-    userEmail = "rteatsrteats@gmail.com";
-    extraConfig = {
-      commit.gpgsign = true;
-      gpg.format = "ssh";
-      user.signingkey = "/home/user/.ssh/id_ed25519.pub";
-    };
-  };
 
   programs.zsh = {
     enable = true;
@@ -289,7 +426,7 @@
     autocd = true;
     oh-my-zsh = {
       enable = true;
-      plugins = [ "git" "ripgrep" "themes" "z" "zsh-interactive-cd" "fzf" "vi-mode" "aliases" "copyfile" ];
+      plugins = [ "git" "themes" "z" "zsh-interactive-cd" "fzf" "vi-mode" "aliases" "copyfile" ];
       theme = "robbyrussell";
     };
   };
@@ -320,12 +457,12 @@
     enableZshIntegration = true;
   };
 
-  programs.obs-studio = {
-    enable = true;
-    plugins = with pkgs; [
-      obs-studio-plugins.obs-backgroundremoval
-    ];
-  };
+  # programs.obs-studio = {
+  #   enable = true;
+  #   plugins = with pkgs; [
+  #     obs-studio-plugins.obs-backgroundremoval
+  #   ];
+  # };
 
   programs.rofi = {
     enable = true;
@@ -336,40 +473,16 @@
     settings = {
       font = {
         # size = 14;
-        offset.y = 4;
-        glyph_offset.y = 4;
+        # offset.y = 4;
+        # glyph_offset.y = 4;
       };
       selection.save_to_clipboard = true;
       mouse.hide_when_typing = true;
-      # colors = {
-      #   # Default colors
-      #   primary = {
-      #     background = "0x0a0e14";
-      #     foreground = "0xb3b1ad";
-      #   };
-      #   # Normal colors
-      #   normal = {
-      #     black =  "0x01060e";
-      #     red =  "0xea6c73";
-      #     green =  "0x91b362";
-      #     yellow =  "0xf9af4f";
-      #     blue =  "0x53bdfa";
-      #     magenta =  "0xfae994";
-      #     cyan =  "0x90e1c6";
-      #     white =  "0xc7c7c7";
-      #   };
-      #   # Bright colors
-      #   bright = {
-      #     black = "0x686868";
-      #     red = "0xf07178";
-      #     blue = "0x59c2ff";
-      #     cyan = "0x95e6cb";
-      #     green = "0xc2d94c";
-      #     magenta = "0xffee99";
-      #     white = "0xffffff";
-      #     yellow = "0xffb454";
-      #   };
-      # };
+      window.dimensions = {
+              lines = 30;
+              columns = 200;
+            };
+	window.startup_mode = "Maximized";
     };
   };
 
@@ -393,5 +506,5 @@
   systemd.user.startServices = "sd-switch";
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
-  home.stateVersion = "23.05";
+  home.stateVersion = "26.05";
 }
