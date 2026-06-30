@@ -2,24 +2,30 @@
   description = "Your new nix config";
 
   inputs = {
-    # nixvim.url = "github:nix-community/nixvim";
-    # nixvim.inputs.nixpkgs.follows = "nixpkgs";
-
-    # nix-nvim.url = "github:rteats/nix-nvim";
-    # boomer.url = "github:rteats/boomer-nix";
-    #nvim-nix.inputs.nixpkgs.follows = "nixpkgs";
-
     # Nixpkgs
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     stylix.url = "github:danth/stylix";
 
-    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    # antigravity-nix = {
+    #   url = "github:jacopone/antigravity-nix";
+    #   inputs.nixpkgs.follows = "nixpkgs";
+    # };
+    helium = {
+      url = "github:schembriaiden/helium-browser-nix-flake";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
 
-    # dwm-flake.url = "github:jordanisaacs/dwm-flake";
+    nixos-hardware.url = "github:NixOS/nixos-hardware/master";
+    driftwm.url = "github:malbiruk/driftwm";
 
     # Home manager
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs";
+
+    nix4nvchad = {
+      url = "github:nix-community/nix4nvchad";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
   };
 
   outputs = {
@@ -27,28 +33,65 @@
     nixpkgs,
     home-manager,
     stylix,
+    helium,
+    # antigravity-nix,
+    driftwm,
     ...
   } @ inputs: let
     inherit (self) outputs;
+
+    # 1. Define your system architecture here
+    system = "x86_64-linux";
+
+    # 2. Define the pkgs instance using that system
+    pkgs = nixpkgs.legacyPackages.${system};
+
+    # 3. Call your package here so it's available for both packages and modules
+    driftwm-settings = pkgs.callPackage ./driftwm-settings-package.nix { };
+    flclashx = pkgs.callPackage ./flclashx-package.nix { };
+    # helium = pkgs.callPackage ./helium-package.nix { };
   in {
+    # Makes it buildable via: nix build .#driftwm-settings
+    packages.${system}.driftwm-settings = driftwm-settings;
+
     # NixOS configuration entrypoint
-    # Available through 'nixos-rebuild --flake .#your-hostname'
+    # Available through 'nixos-rebuild --flake .#redmibook'
     nixosConfigurations = {
       redmibook = nixpkgs.lib.nixosSystem {
-        specialArgs = {inherit inputs outputs;};
-        # > Our main nixos configuration file <
-        modules = [ stylix.nixosModules.stylix ./nixos/configuration.nix];
+        specialArgs = { inherit inputs outputs; };
+        modules = [ 
+          stylix.nixosModules.stylix 
+	  ./nixos/power-management.nix
+          ./nixos/configuration.nix
+          ({ pkgs, ... }: {
+            environment.systemPackages = [ driftwm-settings
+	    flclashx  
+	    inputs.helium.packages.${system}.default
+            ];
+          })
+        ];
       };
     };
 
     # Standalone home-manager configuration entrypoint
-    # Available through 'home-manager --flake .#your-username@your-hostname'
+    # Available through 'home-manager --flake .#user@redmibook'
     homeConfigurations = {
       "user@redmibook" = home-manager.lib.homeManagerConfiguration {
-        pkgs = nixpkgs.legacyPackages.x86_64-linux; # Home-manager requires 'pkgs' instance
+        inherit pkgs; # Reuses the pkgs instance we defined in the let block
         extraSpecialArgs = { inherit inputs outputs; };
-        # > Our main home-manager configuration file <
-        modules = [ stylix.homeModules.stylix ./home-manager/home.nix];
+        modules = [ 
+          stylix.homeModules.stylix 
+          ./home-manager/home.nix 
+          {
+            nixpkgs.overlays = [
+              # (final: prev: {
+              #   openldap = prev.openldap.overrideAttrs (_: {
+              #     doCheck = false;
+              #   });
+              # })
+            ];
+          }
+        ];
       };
     };
   };

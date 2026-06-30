@@ -6,7 +6,8 @@
   config,
   pkgs,
   ...
-}: {
+}:
+{
   # You can import other NixOS modules here
   imports = [
     # If you want to use modules from other flakes (such as nixos-hardware):
@@ -56,24 +57,26 @@
   # };
   # environment.sessionVariables = {LIBVA_DRIVER_NAME = "iHD";}; # Force intel-media-driver
 
-  nix = let
-    flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
-  in {
-    settings = {
-      # Enable flakes and new 'nix' command
-      experimental-features = "nix-command flakes";
-      # Opinionated: disable global registry
-      flake-registry = "";
-      # Workaround for https://github.com/NixOS/nix/issues/9574
-      nix-path = config.nix.nixPath;
-    };
-    # Opinionated: disable channels
-    channel.enable = false;
+  nix =
+    let
+      flakeInputs = lib.filterAttrs (_: lib.isType "flake") inputs;
+    in
+    {
+      settings = {
+        # Enable flakes and new 'nix' command
+        experimental-features = "nix-command flakes";
+        # Opinionated: disable global registry
+        flake-registry = "";
+        # Workaround for https://github.com/NixOS/nix/issues/9574
+        nix-path = config.nix.nixPath;
+      };
+      # Opinionated: disable channels
+      channel.enable = false;
 
-    # Opinionated: make flake registry and nix path match flake inputs
-    registry = lib.mapAttrs (_: flake: {inherit flake;}) flakeInputs;
-    nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
-  };
+      # Opinionated: make flake registry and nix path match flake inputs
+      registry = lib.mapAttrs (_: flake: { inherit flake; }) flakeInputs;
+      nixPath = lib.mapAttrsToList (n: _: "${n}=flake:${n}") flakeInputs;
+    };
 
   # FIXME: Add the rest of your current configuration
 
@@ -90,7 +93,13 @@
         # TODO: Add your SSH public key(s) here, if you plan on using SSH to connect
       ];
       # TODO: Be sure to add any other groups you need (such as networkmanager, audio, docker, etc)
-      extraGroups = [ "video" "wheel" "networkmanager" "audio" "users"];
+      extraGroups = [
+        "video"
+        "wheel"
+        "networkmanager"
+        "audio"
+        "users"
+      ];
     };
   };
 
@@ -104,14 +113,13 @@
   boot.loader.grub.useOSProber = true;
   #boot.loader.grub.storePath = false;
 
-
-
-  boot.supportedFilesystems = ["ntfs"];
+  boot.supportedFilesystems = [ "ntfs" ];
 
   boot.kernelModules = [ "tun" ];
 
+
   services.fprintd.enable = true;
- # If simply enabling fprintd is not enough, try enabling fprintd.tod...
+  # If simply enabling fprintd is not enough, try enabling fprintd.tod...
   services.fprintd.tod.enable = true;
   # ...and use one of the next four drivers
   services.fprintd.tod.driver = pkgs.libfprint-2-tod1-goodix; # Goodix driver module
@@ -128,18 +136,16 @@
 
   powerManagement.enable = true;
 
-
-  boot.kernelParams = ["resume_offset=61440"];
+  boot.kernelParams = [ "resume_offset=61440" "video=eDP-1:3200x2000@60" ];
 
   boot.resumeDevice = "/dev/disk/by-uuid/22364ec8-3373-4fb3-a39c-c7408eb4ef24";
 
   # boot.initrd.luks.devices."luks-bce853f2-4243-44a9-9384-1569e0adf66d".allowDiscards = true;
 
-
   swapDevices = [
     {
       device = "/var/lib/swapfile";
-      size = 18*1024; # 18 gb
+      size = 18 * 1024; # 18 gb
     }
   ];
 
@@ -149,11 +155,11 @@
     HandlePowerKey = "hibernate";
     HandlePowerKeyLongPress = "poweroff"; # Keep as safety valve to force kill power
   };
-  
+
   systemd.sleep.settings.Sleep = {
-    AllowSuspend="no";
-    AllowHybridSleep="no";
-    AllowSuspendThenHibernate="no";
+    AllowSuspend = "no";
+    AllowHybridSleep = "no";
+    AllowSuspendThenHibernate = "no";
   };
 
   # Completely disable standard suspend states in systemd
@@ -163,8 +169,6 @@
   #   AllowSuspendThenHibernate=no
   # '';
   # DOES NOT WORK, SAYS AT BUILD TIME
-
-
 
   networking.hostName = "redmibook";
   #networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
@@ -176,13 +180,50 @@
   # Enable networking
   networking.networkmanager.enable = true;
   # Example: HTTP proxy on 127.0.0.1:7890 (adjust port to your FlClashX proxy)
-  
+
   # will make everything depend on flclashx, which is not needed
   networking.proxy.default = "http://127.0.0.1:7890";
+  networking.proxy.allProxy = "http://127.0.0.1:7890";
   networking.proxy.noProxy = "127.0.0.1,localhost,::1";
   # networking.proxy.socks = "socks5://127.0.0.1:7891"; #doesn't work
 
+  # Enable systemd-resolved
+  # services.resolved = {
+  #   enable = true;
+  #
+  #   # Enforce DNS-over-HTTPS (DoH).
+  #   # "yes" strictly requires DoH. "opportunity" falls back to standard DNS if DoH fails.
+  #   settings.Resolve.DNSOverTLS = "yes";
+  #   settings.Resolve.dnssec = "true";
+  #
+  #   # Set your preferred upstream DoH servers (e.g., Quad9 and Cloudflare)
+  #   # The syntax must include the domain snippet for SNI verification
+  #   settings.Resolve.Domains = [
+  #     # "9.9.9.9#dns.quad9.net"
+  #     # "149.112.112.112#dns.quad9.net"
+  #     # "1.1.1.1#cloudflare-dns.com"
+  #     # "1.0.0.1#cloudflare-dns.com"
+  #     "111.88.96.50#xbox-dns.ru"
+  #   ];
+  #
+  #   # Optional fallback servers if primary ones are entirely unreachable
+  #   settings.Resolve.FallbackDNS = [
+  #     "8.8.8.8#dns.google"
+  #   ];
+  # };
 
+  # 2. Tell NetworkManager to use resolved AND ignore local router DNS assignments
+  # networking.networkmanager = {
+  #   dns = "systemd-resolved";
+  #   # Force connection profiles to prioritize system-configured DNS over DHCP
+  #   insertNameservers = [
+  #     "9.9.9.9"
+  #     "1.1.1.1"
+  #   ];
+  # };
+
+  # Clear out rogue DNS domain variables
+  # networking.search = [ ];
 
   # Set your time zone.
   time.timeZone = "Europe/Moscow";
@@ -190,25 +231,38 @@
   # Select internationalisation properties.
   i18n.defaultLocale = "en_US.UTF-8";
 
-   i18n.extraLocaleSettings = {
-     LANGUAGE = "en_US.UTF-8";
-     LC_ALL = "en_US.UTF-8";
-     LC_ADDRESS = "en_US.UTF-8";
-     LC_IDENTIFICATION = "en_US.UTF-8";
-     LC_MEASUREMENT = "en_US.UTF-8";
-     LC_MONETARY = "en_US.UTF-8";
-     LC_NAME = "en_US.UTF-8";
-     LC_NUMERIC = "en_US.UTF-8";
-     LC_PAPER = "en_US.UTF-8";
-     LC_TELEPHONE = "en_US.UTF-8";
-     LC_TIME = "en_US.UTF-8";
-   };
+  i18n.extraLocaleSettings = {
+    LANGUAGE = "en_US.UTF-8";
+    LC_ALL = "en_US.UTF-8";
+    LC_ADDRESS = "en_US.UTF-8";
+    LC_IDENTIFICATION = "en_US.UTF-8";
+    LC_MEASUREMENT = "en_US.UTF-8";
+    LC_MONETARY = "en_US.UTF-8";
+    LC_NAME = "en_US.UTF-8";
+    LC_NUMERIC = "en_US.UTF-8";
+    LC_PAPER = "en_US.UTF-8";
+    LC_TELEPHONE = "en_US.UTF-8";
+    LC_TIME = "en_US.UTF-8";
+  };
 
   # Enable the X11 windowing system.
 
+  programs.xwayland.enable = true;
+
   programs.xfconf.enable = true;
 
-
+  # services.greetd.enable = true;
+  # programs.regreet.enable = true;
+  # services.greetd.settings.default_session = {
+  #   command = "driftwm -s -- gtkgreet";
+  #   user = "user";
+  # };
+  services.displayManager.sddm.enable = true;
+  services.displayManager.sddm.wayland.enable = true;
+  services.displayManager.sddm.theme = "where_is_my_sddm_theme";
+  services.displayManager.sddm.extraPackages = with pkgs; [
+    kdePackages.qt5compat
+  ];
 
   services.xserver = {
     enable = true;
@@ -224,10 +278,8 @@
 
     };
     dpi = 192;
-    # displayManager.sddm.enable = true;
-    # displayManager.sddm.theme = "where-is-my-sddm-theme";
 
-    displayManager.lightdm.enable = true;
+    # displayManager.lightdm.enable = true;
     # displayManager.lightdm.greeters.slick.enable = true;
 
     # displayManager.gdm.enable = true;
@@ -252,6 +304,7 @@
       options = "grp:toggle,caps:escape";
     };
   };
+  services.displayManager.sessionPackages = [ inputs.driftwm.packages.${pkgs.system}.default ];
   # services.picom.enable = true;
   # services.displayManager = {
   #   defaultSession = "xfce+dwm";
@@ -300,69 +353,129 @@
     };
   };
 
+  # programs.proxychains = {
+  #   enable = true;
+  #   package = pkgs.proxychains-ng;
+  #   proxies = {
+  #     myproxy = {
+  #       type = "http";
+  #       enable = true;
+  #       host = "127.0.0.1";
+  #       port = 7890;
+  #     };
+  #   };
+  # };
 
-programs.corectrl.enable = true;
+  programs.corectrl.enable = true;
 
-hardware.cpu.x86.msr.enable = true;
-hardware.amdgpu.overdrive.enable = true;
-systemd.packages = with pkgs; [ lact ];
-systemd.services.lactd.wantedBy = ["multi-user.target"];
-services.lact.enable = true;
+  hardware.cpu.x86.msr.enable = true;
+  hardware.amdgpu.overdrive.enable = true;
+  systemd.packages = with pkgs; [ lact ];
+  systemd.services.lactd.wantedBy = [ "multi-user.target" ];
+  services.lact.enable = true;
+
+  # Automatically launch Waybar and network tray applet when your user logs in
+  # systemd.user.services.wayland-desktop-autostart = {
+  #   description = "Start Waybar and System Tray apps on login";
+  #   wantedBy = [ "graphical-session.target" ];
+  #   partOf = [ "graphical-session.target" ];
+  #   serviceConfig = {
+  #     ExecStart = "${pkgs.writeShellScript "autostart" ''
+  #       # Launch Waybar panel
+  #       ${pkgs.waybar}/bin/waybar &
+  #
+  #       # Launch Network Manager tray icon (XFCE equivalent)
+  #       ${pkgs.networkmanagerapplet}/bin/nm-applet --indicator &
+  #
+  #       wait
+  #     ''}";
+  #     Restart = "on-failure";
+  #   };
+  # };
   # List packages installed in system profile. To search, run:
   # $ nix search wget
-  environment.systemPackages = with pkgs; [
- zenstates
- ryzenadj 
-    lact
- corectrl 
-    distrobox
-    xclip
-    zsh
-    ffmpeg
+  programs.gpu-screen-recorder.enable = true; # For promptless recording on both CLI and GUI
+
+
+  environment.systemPackages = [
+    # Pull the default package directly from the flake input
+    inputs.driftwm.packages.${pkgs.system}.default
+
+    # X11 compatibility bridge (critical for apps like Steam or Discord)
+    pkgs.xwayland-satellite
+    pkgs.waybar
+    pkgs.rofi
+    pkgs.wlogout
+    pkgs.brightnessctl
+
+
+
+    pkgs.hyprlock
+    pkgs.hypridle
+
+    pkgs.networkmanagerapplet # Provides 'nm-applet' for a clickable Wi-Fi tray icon
+    # Recommended additions for driftwm screencasting and tools
+    pkgs.xdg-desktop-portal
+    pkgs.xdg-desktop-portal-wlr
+    pkgs.grim # Screenshots
+    pkgs.slurp # Screen region selection
+    pkgs.foot
+    pkgs.godotPackages_4_7.godot
+
+    pkgs.gpu-screen-recorder-gtk
+
+
+
+    pkgs.zenstates
+    pkgs.ryzenadj
+    pkgs.lact
+    pkgs.corectrl
+    pkgs.distrobox
+    pkgs.xclip
+    pkgs.zsh
+    pkgs.ffmpeg
 
     # editors
-    neovim
+    pkgs.neovim
 
-    # where-is-my-sddm-theme
+    pkgs.where-is-my-sddm-theme
 
+    pkgs.wget
+    pkgs.cmake
+    pkgs.playerctl
 
-    wget
-    cmake
-    xcape
-    wine
-    wine64
-    winetricks
+    pkgs.xcape
+    pkgs.wine
+    pkgs.wine64
+    pkgs.winetricks
 
-    gnumake
-    harfbuzz
-    
+    pkgs.gnumake
+    pkgs.harfbuzz
 
-    gparted
+    pkgs.gparted
 
     # python3Full
     #nvim-pkg
     # pyright
     #tsserver
     # doas
-    xfce4-volumed-pulse
-    xfce4-pulseaudio-plugin
-    xfce4-whiskermenu-plugin
+    pkgs.xfce4-volumed-pulse
+    pkgs.xfce4-pulseaudio-plugin
+    pkgs.xfce4-whiskermenu-plugin
     # android-tools
     #xfce.xfdesktop
     # stylua
-    black
-    gcc
-    git
-    home-manager
-    openssh
-    fzf
-    ripgrep
-    xclip
+    pkgs.black
+    pkgs.gcc
+    pkgs.git
+    pkgs.home-manager
+    pkgs.openssh
+    pkgs.fzf
+    pkgs.ripgrep
+    pkgs.xclip
     # dxvk vkd3d-proton dxvk-nvapi latencyflex runtime winebridge soda
     # gemini-cli # computer virus
-    antigravity
-
-
+    # antigravity
 
     # (let base = pkgs.appimageTools.defaultFhsEnvArgs; in
     #   pkgs.buildFHSUserEnv (base // {
@@ -392,12 +505,14 @@ services.lact.enable = true;
       inter
       jetbrains-mono
       intel-one-mono
+      nerd-fonts.jetbrains-mono
+      font-awesome
     ];
     fontconfig = {
       defaultFonts = {
         #serif = [ "Vazirmatn" "Ubuntu" ];
-        sansSerif = ["Inter"];
-        monospace = ["JetBrains Mono"];
+        sansSerif = [ "Inter" ];
+        monospace = [ "JetBrains Mono" ];
       };
     };
   };
@@ -444,6 +559,7 @@ services.lact.enable = true;
     };
     targets = {
       gtk.enable = true;
+      grub.enable = false;
       # lightdm.enable = true;
     };
 
@@ -451,20 +567,20 @@ services.lact.enable = true;
 
   # programs.nix-ld.enable = true;
   # programs.nix-ld.libraries = with pkgs; [
-    # Add any missing dynamic libraries for unpackaged programs
-    # here, NOT in environment.systemPackages
+  # Add any missing dynamic libraries for unpackaged programs
+  # here, NOT in environment.systemPackages
   # ];
-  programs.localsend.enable = true;
 
+  programs.hyprlock.enable = true;
+
+  programs.localsend.enable = true;
 
   programs.noisetorch.enable = true;
 
   programs.appimage.enable = true;
   programs.appimage.binfmt = true;
-  programs.appimage.package = pkgs.appimage-run.override 
-  {
-    extraPkgs = pkgs: 
-    [
+  programs.appimage.package = pkgs.appimage-run.override {
+    extraPkgs = pkgs: [
       pkgs.icu
       pkgs.keybinder
       pkgs.keybinder3
@@ -473,12 +589,11 @@ services.lact.enable = true;
       pkgs.ayatana-ido
       pkgs.libdbusmenu
 
-
       pkgs.libepoxy
       pkgs.libxcrypt-legacy
       pkgs.python312
-      pkgs.python312Packages.torch
-    ]; 
+      # pkgs.python312Packages.torch
+    ];
   };
 
   services.touchegg.enable = true;
@@ -495,7 +610,11 @@ services.lact.enable = true;
   # boot.extraModprobeConfig = ''
   #   options v4l2loopback devices=1 video_nr=1 card_label="OBS Cam" exclusive_caps=1
   # '';
-  # security.polkit.enable = true;
+  security.polkit.enable = true;
+  xdg.portal = {
+    enable = true;
+    extraPortals = [ pkgs.xdg-desktop-portal-wlr ];
+  };
 
   # https://nixos.wiki/wiki/FAQ/When_do_I_update_stateVersion
   system.stateVersion = "25.11";
